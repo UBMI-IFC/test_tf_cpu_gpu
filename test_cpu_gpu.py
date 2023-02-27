@@ -44,6 +44,15 @@ the device we are going to use """
     return model
 
 
+# GPU
+t1 = time()
+with tf.device('/GPU:1'):
+    model_gpu = get_model()
+    model_gpu.fit(X_train_scaled, y_train_encoded, epochs = 10)
+t2 = time()
+test1_gpu_time = t2-t1
+
+
 # CPU
 # using specific device
 t1 = time()
@@ -53,13 +62,6 @@ with tf.device('/CPU:0'):
 t2 = time()
 test1_cpu_time = t2-t1
     
-# GPU
-t1 = time()
-with tf.device('/GPU:0'):
-    model_gpu = get_model()
-    model_gpu.fit(X_train_scaled, y_train_encoded, epochs = 10)
-t2 = time()
-test1_gpu_time = t2-t1
 
 
 ###################
@@ -99,6 +101,15 @@ the device we are going to use """
     return model
 
 
+
+t1 = time()
+with tf.device('/GPU:0'):
+    gpu_model = get_model(hidden_layers=5)
+    gpu_model.fit(train_images_scaled, train_labels, epochs=5)
+t2 = time()
+test2_gpu_time = t2-t1
+
+
 t1 = time()
 with tf.device('/CPU:0'):
     # use 5 layers
@@ -107,13 +118,6 @@ with tf.device('/CPU:0'):
 t2 = time()
 test2_cpu_time = t2-t1
 
-    
-t1 = time()
-with tf.device('/GPU:0'):
-    gpu_model = get_model(hidden_layers=5)
-    gpu_model.fit(train_images_scaled, train_labels, epochs=5)
-t2 = time()
-test2_gpu_time = t2-t1
 
 
 ##########
@@ -131,5 +135,4 @@ print('Speed test:')
 print(f'Test 1 CPU:  {test1_cpu_time} seconds')
 print(f'Test 1 GPU:  {test1_gpu_time} seconds')
 print(f'Test 2 CPU:  {test2_cpu_time} seconds')
-print(f'Test 2 CPU:  {test2_gpu_time} seconds')
-
+print(f'Test 2 GPU:  {test2_gpu_time} seconds')
