@@ -93,7 +93,7 @@ def scan_hardware():
 
 # Parser zone
 
-def argument_parser():
+def args():
         # Zona de declaración
     parser = argparse.ArgumentParser(
         prog="benchmark_v1.ipynb",
@@ -101,12 +101,12 @@ def argument_parser():
         epilog="This program uses tensorflow and sklearn to train ML models, in the CPU(s) or/and in the GPU(s)")
     
     parser.add_argument("--venv", action="store_true", help="create a virtual environment for easy installing and uninstalling libraries")
-    parser.add_argument("-i","--iter", help="Number of repeated trainings for each algorithm (defaullt = 1000)",
+    parser.add_argument("-i","--iter", help="Number of repeated trainings for each algorithm (int, defaullt = 1000)",
                         type=int,default=100,dest='iter',metavar='Iterations') # change the number to 1000, for practicity i used 100
     parser.add_argument("-S","--save", action="store_true", help="Use this option for saving the benchmark, only after the benchmark has ran")
 
     # Crear subparsers
-    subparser = parser.add_subparsers(title="Options", dest="subcommand", help="program subcommands (scan,show,run,save)")
+    subparser = parser.add_subparsers(title="Options", dest="subparser", help="program subcommands (scan,show,run,save)")
     # scan_subparser = parser.add_subparsers(title='Scan', dest='subcommand', help='scan subcommands')
     # show_subparser = parser.add_subparsers(title='Show', dest='subcommand', help='display the list of saved benchmarks')
     # run_subparser  = parser.add_subparsers(title='Run', dest='subcommand', help='options for running the current benchmark')
@@ -127,17 +127,16 @@ def argument_parser():
     # parser_both = device_subparser.add_parser('both')
     # parser_cpu = device_subparser.add_parser('cpu')
     # parser_gpu = device_subparser.add_parser('gpu')
-    args = parser.parse_args()
-    return args
+    return parser.parse_args()
 
 # if __name__ == "__main__":
     ## Este es el que será el código final, pero estamos entendiendo el argparser
-def main():
-    args = argument_parser()
-    print(args)
-    if args.subcommand == "subcommand":
+def main_func():
+    args = args()
+    print(args.subparser)
+    if args.subparser == "scan":
         # system = scan_hardware()
         print("impresión del hardware")
 
 
-main()
+main_func()
