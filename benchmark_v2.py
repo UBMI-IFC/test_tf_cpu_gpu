@@ -93,7 +93,7 @@ def scan_hardware():
 
 # Parser zone
 
-def args():
+def arguments():
         # Zona de declaración
     parser = argparse.ArgumentParser(
         prog="benchmark_v1.ipynb",
@@ -101,22 +101,21 @@ def args():
         epilog="This program uses tensorflow and sklearn to train ML models, in the CPU(s) or/and in the GPU(s)")
     
     parser.add_argument("--venv", action="store_true", help="create a virtual environment for easy installing and uninstalling libraries")
-    parser.add_argument("-i","--iter", help="Number of repeated trainings for each algorithm (int, defaullt = 1000)",
-                        type=int,default=100,dest='iter',metavar='Iterations') # change the number to 1000, for practicity i used 100
-    parser.add_argument("-S","--save", action="store_true", help="Use this option for saving the benchmark, only after the benchmark has ran")
 
     # Crear subparsers
-    subparser = parser.add_subparsers(title="Options", dest="subparser", help="program subcommands (scan,show,run,save)")
-    # scan_subparser = parser.add_subparsers(title='Scan', dest='subcommand', help='scan subcommands')
-    # show_subparser = parser.add_subparsers(title='Show', dest='subcommand', help='display the list of saved benchmarks')
-    # run_subparser  = parser.add_subparsers(title='Run', dest='subcommand', help='options for running the current benchmark')
-    # save_subparser = parser.add_subparsers(title='Save', dest='subcommand', help='save current benchmark')
+    subparser = parser.add_subparsers(title="subcommands", dest="subcommand", help="program subcommands")
 
-    # Creo el parser para escanear el hardware
-    # scan_parser = scan_subparser.add_parser('scan', help='Scan the current hardware')
-    scan_parser = subparser.add_parser("scan", help="Scan the current hardware")
-    scan_parser.add_argument("-s","--scan",help="Use if the hardware in the system isn't known")
-
+    # Creo los subparsers, para escanear, para mostrar, para correr y para salvar el benchmark
+    scan_parser = subparser.add_parser("scan", help="scan the current hardware") # scan no necesita tener niguna opción
+    show_subparser = subparser.add_parser("show", help="display the list of saved benchmarks") # show tampoco necesita tener ninguna opción
+    run_subparser = subparser.add_parser("run", help="options for running the current benchmark") # run si tiene que tener argumentos 
+    run_subparser.add_argument("-i","--iter", help="Number of repeated trainings for each algorithm (int, default = 1000)",
+                        type=int,default=100,dest='iter',metavar='Iterations') # change the number to 1000, for practicity i used 100
+    run_subparser.add_argument("-d","--dataset", choices=[1,2,3,4,5], default=1, help="select the dataset to train the ML model")
+    run_subparser.add_argument("-m","--model",choices=[1,2,3], default=1, help="select the ML model")
+    run_subparser.add_argument("-p","--processor", help="select the quantity of processors that can be used in the training")
+    run_subparser.add_argument("-h","--hardware",help="select the hardware in which the code is ran")
+    save_subparser = subparser.add_parser("save", help="save current benchmark") # save tampoco necesita argumentos
     #### Hasta aquí bien ####
     
     # device_subparser = parser.add_subparsers(
@@ -132,11 +131,18 @@ def args():
 # if __name__ == "__main__":
     ## Este es el que será el código final, pero estamos entendiendo el argparser
 def main_func():
-    args = args()
-    print(args.subparser)
-    if args.subparser == "scan":
-        # system = scan_hardware()
-        print("impresión del hardware")
+    args = arguments()
+    # print(args.subcommand)
+    if args.subcommand == "scan":
+        system = scan_hardware()
+    if args.subcommand == "show":
+        print("benchmark salvados")
+    if args.subcommand == "run":
+        print("corriendo el programa")
+    if args.subcommand == "save":
+        print("El archivo se ha guardado correctamente")
+
+
 
 
 main_func()
