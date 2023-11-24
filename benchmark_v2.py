@@ -113,19 +113,10 @@ def arguments():
                         type=int,default=100,dest='iter',metavar='Iterations') # change the number to 1000, for practicity i used 100
     run_subparser.add_argument("-d","--dataset", choices=[1,2,3,4,5], default=1, help="select the dataset to train the ML model")
     run_subparser.add_argument("-m","--model",choices=[1,2,3], default=1, help="select the ML model")
-    run_subparser.add_argument("-p","--processor", help="select the quantity of processors that can be used in the training")
-    run_subparser.add_argument("-h","--hardware",help="select the hardware in which the code is ran")
+    run_subparser.add_argument("-p","--processor", choices=[1,2,3,4,5,6,7,8], default=1, help="select the quantity of processors that can be used in the training")
+    run_subparser.add_argument("-h","--hardware",choices=[1,2], default=1, help="select the hardware in which the code is ran")
     save_subparser = subparser.add_parser("save", help="save current benchmark") # save tampoco necesita argumentos
-    #### Hasta aquí bien ####
     
-    # device_subparser = parser.add_subparsers(
-    #     title='Hardware and training commands',
-    #     description='subcommands options for selecting the working hardware',
-    #     help="In order to use this command there are some few things to be aware of:",
-    #     required=True, dest='hardware')
-    # parser_both = device_subparser.add_parser('both')
-    # parser_cpu = device_subparser.add_parser('cpu')
-    # parser_gpu = device_subparser.add_parser('gpu')
     return parser.parse_args()
 
 # if __name__ == "__main__":
