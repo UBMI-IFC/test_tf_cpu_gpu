@@ -13,6 +13,7 @@ import cpuinfo                      #pip install py-cpuinfo
 # for ml models
 import tensorflow as tf
 from tensorflow import keras
+import sklearn as skl
 # misc libraries
 import multiprocessing
 import os
@@ -107,7 +108,7 @@ def arguments():
 
     # Creo los subparsers, para escanear, para mostrar, para correr y para salvar el benchmark
     scan_parser = subparser.add_parser("scan", help="scan the current hardware") # scan no necesita tener niguna opción
-    show_subparser = subparser.add_parser("show", help="display the list of saved benchmarks") # show tampoco necesita tener ninguna opción
+    show_subparser = subparser.add_parser("show", help="display the list of saved benchmarks") # maybe argumentos posicionales del primer y último benchmark
     run_subparser = subparser.add_parser("run", help="options for running the current benchmark") # run si tiene que tener argumentos 
     run_subparser.add_argument("-i","--iter", help="Number of repeated trainings for each algorithm (int, default = 1000)",
                         type=int,default=100,dest='iter',metavar='Iterations') # change the number to 1000, for practicity i used 100
@@ -115,25 +116,26 @@ def arguments():
     run_subparser.add_argument("-m","--model",choices=[1,2,3], default=1, help="select the ML model")
     run_subparser.add_argument("-p","--processor", choices=[1,2,3,4,5,6,7,8], default=1, help="select the quantity of processors that can be used in the training")
     run_subparser.add_argument("-h","--hardware",choices=[1,2], default=1, help="select the hardware in which the code is ran")
-    save_subparser = subparser.add_parser("save", help="save current benchmark") # save tampoco necesita argumentos
+    save_subparser = subparser.add_parser("save", help="save current benchmark") # quizá un argumento posicional de nombre
     
     return parser.parse_args()
 
-# if __name__ == "__main__":
     ## Este es el que será el código final, pero estamos entendiendo el argparser
 def main_func():
     args = arguments()
     # print(args.subcommand)
     if args.subcommand == "scan":
+        # Aquí vamos a hacer que escanee el hardware de una vez, faltaría mejorarlo para que 
         system = scan_hardware()
     if args.subcommand == "show":
+        # Para que muestre el benchmark que llevamos, se deberá guardar en un html o un archivo por separado
         print("benchmark salvados")
     if args.subcommand == "run":
+        # Para que corra el código con todos los posibles escenarios, deberá correr al menos un modelo con un dataset
         print("corriendo el programa")
     if args.subcommand == "save":
         print("El archivo se ha guardado correctamente")
 
 
-
-
-main_func()
+if __name__ == "__main__":
+    main_func()
