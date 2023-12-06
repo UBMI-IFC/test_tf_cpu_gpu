@@ -110,17 +110,29 @@ def arguments():
     scan_parser = subparser.add_parser("scan", help="scan the current hardware") # scan no necesita tener niguna opción
     show_subparser = subparser.add_parser("show", help="display the list of saved benchmarks") # maybe argumentos posicionales del primer y último benchmark
     run_subparser = subparser.add_parser("run", help="options for running the current benchmark") # run si tiene que tener argumentos 
-    run_subparser.add_argument("-i","--iter", help="Number of repeated trainings for each algorithm (int, default = 1000)",
-                        type=int,default=100,dest='iter',metavar='Iterations') # change the number to 1000, for practicity i used 100
-    run_subparser.add_argument("-d","--dataset", choices=[1,2,3,4,5], default=1, help="select the dataset to train the ML model")
-    run_subparser.add_argument("-m","--model",choices=[1,2,3], default=1, help="select the ML model")
-    run_subparser.add_argument("-p","--processor", choices=[1,2,3,4,5,6,7,8], default=1, help="select the quantity of processors that can be used in the training")
-    run_subparser.add_argument("-h","--hardware",choices=[1,2], default=1, help="select the hardware in which the code is ran")
+    run_subparser.add_argument("-H","--hardware",choices=[1,2], default=1, type=int, nargs=1, help="select the hardware in which the code is ran")
+    run_subparser.add_argument("-p","--processor", choices=[1,2,3,4,5,6,7,8], default=1, type=int, nargs=1, help="select the quantity of processors that can be used in the training")
+    run_subparser.add_argument("-m","--model",choices=[1,2,3], default=1, type=int, nargs=1, help="select the ML model")
+    run_subparser.add_argument("-d","--dataset", choices=[1,2,3,4,5], default=5, type=int, nargs=1, help="select the dataset to train the ML model")
+    run_subparser.add_argument("-i","--iteration", action="store", help="Number of repeated trainings for each algorithm (int, default = 1000)",
+                        type=int,default=1000,dest='iteration',metavar='Iterations') # change the number to 1000, for practicity i used 100
     save_subparser = subparser.add_parser("save", help="save current benchmark") # quizá un argumento posicional de nombre
-    
+    ###### NOTA: revisar el nargs, para que solo pueda admitir un solo argumento
     return parser.parse_args()
 
-    ## Este es el que será el código final, pero estamos entendiendo el argparser
+def dataset_processing(data):
+    if data==1:
+        print(data)
+    elif data==2:
+        print(data)
+    elif data==3:
+        print(data)
+    elif data==4:
+        print(data)
+    elif data==5:
+        print(data)
+
+## Necesitamos empezar el programa al menos con un dataset, un modelo de ML y un numero determinado de iteraciones
 def main_func():
     args = arguments()
     # print(args.subcommand)
@@ -128,14 +140,22 @@ def main_func():
         # Aquí vamos a hacer que escanee el hardware de una vez, faltaría mejorarlo para que 
         system = scan_hardware()
     if args.subcommand == "show":
-        # Para que muestre el benchmark que llevamos, se deberá guardar en un html o un archivo por separado
+        # Para que muestre el benchmark que llevamos, se deberá guardar en un html o un archivo por separado\
         print("benchmark salvados")
     if args.subcommand == "run":
         # Para que corra el código con todos los posibles escenarios, deberá correr al menos un modelo con un dataset
-        print("corriendo el programa")
+        print(args)
+        if args.hardware == 1:
+            print("corriendo el programa en el cpu")
+            print(args.iteration)
+            dataset_processing(args.dataset)
+        if args.hardware == 2:
+            print("corriendo el programa en la gpu")
     if args.subcommand == "save":
-        print("El archivo se ha guardado correctamente")
+        print("El benchmark se ha guardado correctamente")
 
+##### NOTA 2: el resultado que queremos observar es unicamemnte en el tiempo de ejecución
 
 if __name__ == "__main__":
     main_func()
+  
