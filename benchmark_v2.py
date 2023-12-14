@@ -120,79 +120,125 @@ def arguments():
     run_subparser.add_argument("-H","--hardware",choices=[1,2], default=1, type=int, help="select the hardware in which the code is ran")
     run_subparser.add_argument("-p","--processor", choices=[1,2,3,4,5,6,7,8], default=1, type=int, help="select the quantity of processors that can be used in the training")
     run_subparser.add_argument("-m","--model",choices=[1,2,3], default=1, type=int, help="select the ML model")
-    run_subparser.add_argument("-d","--dataset", choices=[1,2,3,4,5], default=5, type=int, help="select the dataset to train the ML model")
+    run_subparser.add_argument("-d","--dataset", choices=[1,2,3,4,5], default=1, type=int, help="select the dataset to train the ML model")
     run_subparser.add_argument("-i","--iteration", action="store", help="Number of repeated trainings for each algorithm (int, default = 1000)",
                         type=int,default=1000,dest='iteration',metavar='Iterations') # change the number to 1000, for practicity i used 100
-    save_subparser = subparser.add_parser("save", help="save current benchmark") # quizá un argumento posicional de nombre
+    save_subparser = subparser.add_parser("save", help="save current benchmark") # quizá un argumento posicional con el nombre con el que se va a guardar
     ###### NOTA: revisar el nargs, para que solo pueda admitir un solo argumento
     return parser.parse_args()
 
 def dataset_processing(num):
-    scaler = StandardScaler()
     if num==1:
-        f_mnist = keras.datasets.fashion_mnist
-        # Separate the data from fmnist into train and test data
-        (x_train,y_train),(x_test,y_test) = f_mnist.load_data()
-        # Copy the data so we can reshape a 2D matrix
-        xc_train = x_train.copy()
-        yc_train = y_train.copy()
-        xc_test = x_test.copy()
-        yc_test = y_test.copy()
-        nshape = xc_train.shape[1]*xc_train.shape[2]
-        xc_train = np.reshape(xc_train,[xc_train.shape[0],nshape])
-        xc_test	= np.reshape(xc_test,[xc_test.shape[0],nshape])
-        xc_train_std = scaler.fit_transform(xc_train)
-        xc_test_std = scaler.transform(xc_test)
         print("The fashion mnist dataset has been chosen")
-        return xc_train_std, yc_train, xc_test_std, yc_test
+        dataset = keras.datasets.fashion_mnist
+        (x_train, y_train), (x_test, y_test) = dataset.load_data()
+
+        # checking images
+        class_names = ["T-shirt/top", "Trouser", "Pullover", "Dress", "Coat",
+                    "Sandal", "Shirt", "Sneaker", "Bag", "Ankle boot"]
+        
+        # scaling, from 8bit pixels to 0-1 values
+        x_train_std = x_train / 255
+        x_test_std = x_test / 255
+        return x_train_std, y_train, x_test_std, y_test
+    
     elif num==2:
-        digits = keras.datasets.cifar10
-        (x_train,y_train),(x_test,y_test) = digits.load_data()
-        # one hot encoding labels
-        y_train_encoded = keras.utils.to_categorical(y_train, num_classes = 10, dtype = 'float32')
-        y_test_encoded = keras.utils.to_categorical(y_test, num_classes = 10, dtype = 'float32')
-        xc_train = x_train.copy()
-        yc_train = y_train.copy()
-        xc_test = x_test.copy()
-        yc_test = y_test.copy()
-        xc_train_std = scaler.fit_transform(xc_train)
-        xc_test_std = scaler.transform(xc_test)
         print("The digits dataset has been chosen")
-        return xc_train_std, yc_train, xc_test_std, yc_test
+        dataset = keras.datasets.cifar10
+        
+        # Separate train and test dataset
+        (x_train, y_train), (x_test, y_test) = dataset.load_data()
+        
+        # Scaling the image, transform data from 8bit values to 0-1 range
+        x_train_std = x_train/255
+        x_test_std = x_test/255
+        
+        # one hot encoding labels
+        y_train_encoded = keras.utils.to_categorical(y_train, num_classes = 10, dtype = "float32")
+        y_test_encoded = keras.utils.to_categorical(y_test, num_classes = 10, dtype = "float32")
+        return x_train_std, y_train_encoded, x_test_std, y_test_encoded
+    
     elif num==3:
-        return (num)
-    elif num==4:
-        return (num)
-    elif num==5:
+        # This option is not implementated yet
         return (num)
     
-def get_model(value):
-    return value
+    elif num==4:
+        # This option is not implementated yet
+        return (num)
+    
+    elif num==5:
+        # This option is not implementated yet
+        return (num)
+    
+def get_model(in_shape, dense_neurons, hidden_layers=1):
+    """This function is for convenience. We can create exactly the same model easly changing the device we are going to use.
+    in_shape      is the input shape of the dataset used
+    dense_neurons is the quantity of neurons per dense layer
+    hidden_layers is the number of dense layers the model has"""
+    # Flatten layer for input
+    # Create list of layers, first one is a flatten layer
+    layers = [keras.layers.Flatten(input_shape=in_shape)]
+    # hideen layers, how many?
+    lesser_layers = np.round(dense_neurons/hidden_layers)
+    for i in range(hidden_layers):
+        if i == 0:
+            layers.append(keras.layers.Dense(dense_neurons, activation="relu"),)
+        else:
+            dense_neurons -= lesser_layers
+            layers.append(keras.layers.Dense(dense_neurons, activation="relu"),)
+    # output layer, classification
+    layers.append(keras.layers.Dense(10, activation="sigmoid"))
+    # creating model 
+    model = keras.Sequential(layers)
+    # compiling and selection optimizer and loss funcition
+    model.compile(optimizer="adam",
+                loss="sparse_categorical_crossentropy",
+                metrics=["accuracy"])
+    return model
 
 ## Necesitamos empezar el programa al menos con un dataset, un modelo de ML y un numero determinado de iteraciones
 def main_func():
     args = arguments()
     # print(args.subcommand)
     if args.subcommand == "scan":
-        # Aquí vamos a hacer que escanee el hardware de una vez, faltaría mejorarlo para que 
+        # Aquí vamos a hacer que escanee el hardware de una vez, faltaría mejorarlo para que lea otras gpus que no sean de nvidia 
+        # y que diga si hay más de una gpu y más de un cpu
         system = scan_hardware()
     if args.subcommand == "show":
-        # Para que muestre el benchmark que llevamos, se deberá guardar en un html o un archivo por separado\
+        # Para que muestre el benchmark que llevamos, se deberá guardar en un html o un .csv por separado
         print("Saved benchmarks")
     if args.subcommand == "run":
         # Para que corra el código con todos los posibles escenarios, deberá correr al menos un modelo con un dataset
         print(args)
+        x_train, y_train, x_test, y_test = dataset_processing(args.dataset)
+        dshape = x_train.shape[1:]
+        dense = np.prod(dshape)
         if args.hardware == 1:
             print("Running on CPU")
-            # print(args.iteration)
-            dataset_processing(args.dataset)
+            t1 = time()
+            with tf.device("/CPU:0"):
+                # use 5 layers
+                cpu_model = get_model(dshape, dense, hidden_layers=5)
+                cpu_model.fit(x_train, y_train, epochs=args.iteration)
+            t2 = time()
+            test_cpu_time = t2-t1
+            print(f"Test CPU:  {test_cpu_time} seconds")
         if args.hardware == 2:
             print("Running on GPU")
+            try:
+                t1 = time()
+                with tf.device("/GPU:0"):
+                    # use 5 layers
+                    gpu_model = get_model(dshape, dense, hidden_layers=5)
+                    gpu_model.fit(x_train, y_train, epochs=args.iteration)
+                t2 = time()
+                test_gpu_time = t2-t1
+                print(f"Test GPU:  {test_gpu_time} seconds")
+            except:
+                print(system["gpu"])
     if args.subcommand == "save":
-        print("The benchmark has been saved succesfully")
-
-##### NOTA 2: el resultado que queremos observar es unicamemnte en el tiempo de ejecución
+        # write in the csv file for saving
+        print("The benchmark has saved succesfully")
 
 if __name__ == "__main__":
     main_func()
-  
