@@ -22,6 +22,7 @@ from sklearn.linear_model import LogisticRegression                             
 from sklearn.svm import SVC                                                                             # model
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis, QuadraticDiscriminantAnalysis     # model
 # misc libraries
+from csv import writer
 import multiprocessing
 import os
 from time import time
@@ -98,35 +99,6 @@ def scan_hardware():
     
     return attributes
 
-
-# Parser zone
-
-def arguments():
-        # Zona de declaración
-    parser = argparse.ArgumentParser(
-        prog="benchmark_v1.ipynb",
-        description="A program for testing the speed training of ML models with tensorflow",
-        epilog="This program uses tensorflow and sklearn to train ML models, in the CPU(s) or/and in the GPU(s)")
-    
-    parser.add_argument("--venv", action="store_true", help="create a virtual environment for easy installing and uninstalling libraries")
-
-    # Crear subparsers
-    subparser = parser.add_subparsers(title="subcommands", dest="subcommand", help="program subcommands")
-
-    # Creo los subparsers, para escanear, para mostrar, para correr y para salvar el benchmark
-    scan_parser = subparser.add_parser("scan", help="scan the current hardware") # scan no necesita tener niguna opción
-    show_subparser = subparser.add_parser("show", help="display the list of saved benchmarks") # maybe argumentos posicionales del primer y último benchmark
-    run_subparser = subparser.add_parser("run", help="options for running the current benchmark") # run si tiene que tener argumentos 
-    run_subparser.add_argument("-H","--hardware",choices=[1,2], default=1, type=int, help="select the hardware in which the code is ran")
-    run_subparser.add_argument("-p","--processor", choices=[1,2,3,4,5,6,7,8], default=1, type=int, help="select the quantity of processors that can be used in the training")
-    run_subparser.add_argument("-m","--model",choices=[1,2,3], default=1, type=int, help="select the ML model")
-    run_subparser.add_argument("-d","--dataset", choices=[1,2,3,4,5], default=1, type=int, help="select the dataset to train the ML model")
-    run_subparser.add_argument("-i","--iteration", action="store", help="Number of repeated trainings for each algorithm (int, default = 1000)",
-                        type=int,default=1000,dest='iteration',metavar='Iterations') # change the number to 1000, for practicity i used 100
-    save_subparser = subparser.add_parser("save", help="save current benchmark") # quizá un argumento posicional con el nombre con el que se va a guardar
-    ###### NOTA: revisar el nargs, para que solo pueda admitir un solo argumento
-    return parser.parse_args()
-
 def dataset_processing(num):
     if num==1:
         print("The fashion mnist dataset has been chosen")
@@ -140,7 +112,8 @@ def dataset_processing(num):
         # scaling, from 8bit pixels to 0-1 values
         x_train_std = x_train / 255
         x_test_std = x_test / 255
-        return x_train_std, y_train, x_test_std, y_test
+        dataset_name = "fashion_mnist"
+        return x_train_std, y_train, x_test_std, y_test, dataset_name
     
     elif num==2:
         print("The digits dataset has been chosen")
@@ -156,7 +129,8 @@ def dataset_processing(num):
         # one hot encoding labels
         y_train_encoded = keras.utils.to_categorical(y_train, num_classes = 10, dtype = "float32")
         y_test_encoded = keras.utils.to_categorical(y_test, num_classes = 10, dtype = "float32")
-        return x_train_std, y_train_encoded, x_test_std, y_test_encoded
+        dataset_name = "cifar10"
+        return x_train_std, y_train_encoded, x_test_std, y_test_encoded, dataset_name
     
     elif num==3:
         # This option is not implementated yet
@@ -196,6 +170,41 @@ def get_model(in_shape, dense_neurons, hidden_layers=1):
                 metrics=["accuracy"])
     return model
 
+def save_benchmark(lst):
+    with open("benchmark.csv", "a",newline="",encoding="utf-8") as benchmark:
+        writer_obj = writer(benchmark)
+        writer_obj.writerow(lst)
+        benchmark.close()
+    return None
+
+# Parser zone
+
+def arguments():
+        # Zona de declaración
+    parser = argparse.ArgumentParser(
+        prog="benchmark_v1.ipynb",
+        description="A program for testing the speed training of ML models with tensorflow",
+        epilog="This program uses tensorflow and sklearn to train ML models, in the CPU(s) or/and in the GPU(s)")
+    
+    parser.add_argument("--venv", action="store_true", help="create a virtual environment for easy installing and uninstalling libraries")
+
+    # Crear subparsers
+    subparser = parser.add_subparsers(title="subcommands", dest="subcommand", help="program subcommands")
+
+    # Creo los subparsers, para escanear, para mostrar, para correr y para salvar el benchmark
+    scan_parser = subparser.add_parser("scan", help="scan the current hardware") # scan no necesita tener niguna opción
+    show_subparser = subparser.add_parser("show", help="display the list of saved benchmarks") # maybe argumentos posicionales del primer y último benchmark
+    run_subparser = subparser.add_parser("run", help="options for running the current benchmark") # run si tiene que tener argumentos 
+    run_subparser.add_argument("-H","--hardware",choices=[1,2], default=1, type=int, help="select the hardware in which the code is ran")
+    run_subparser.add_argument("-p","--processor", choices=[1,2,3,4,5,6,7,8], default=1, type=int, help="select the quantity of processors that can be used in the training")
+    run_subparser.add_argument("-d","--dataset", choices=[1,2,3,4,5], default=1, type=int, help="select the dataset to train the ML model")
+    run_subparser.add_argument("-l","--layers", default=3, type=int, help="select the number of hidden layers to train the model")
+    run_subparser.add_argument("-i","--iteration", action="store", help="Number of repeated trainings for each algorithm (int, default = 1000)",
+                        type=int,default=1000,dest='iteration',metavar='Iterations') # change the number to 1000, for practicity i used 100
+    save_subparser = subparser.add_parser("save", help="save current benchmark") # quizá un argumento posicional con el nombre con el que se va a guardar
+    ###### NOTA: revisar el nargs, para que solo pueda admitir un solo argumento
+    return parser.parse_args()
+
 ## Necesitamos empezar el programa al menos con un dataset, un modelo de ML y un numero determinado de iteraciones
 def main_func():
     args = arguments()
@@ -210,7 +219,7 @@ def main_func():
     if args.subcommand == "run":
         # Para que corra el código con todos los posibles escenarios, deberá correr al menos un modelo con un dataset
         print(args)
-        x_train, y_train, x_test, y_test = dataset_processing(args.dataset)
+        x_train, y_train, x_test, y_test, data_name = dataset_processing(args.dataset)
         dshape = x_train.shape[1:]
         dense = np.prod(dshape)
         if args.hardware == 1:
@@ -218,26 +227,31 @@ def main_func():
             t1 = time()
             with tf.device("/CPU:0"):
                 # use 5 layers
-                cpu_model = get_model(dshape, dense, hidden_layers=5)
+                cpu_model = get_model(dshape, dense, hidden_layers=args.layers)
                 cpu_model.fit(x_train, y_train, epochs=args.iteration)
             t2 = time()
-            test_cpu_time = t2-t1
-            print(f"Test CPU:  {test_cpu_time} seconds")
+            test_time = t2-t1
+            cpu_gpu = "CPU"
+            print(f"Test CPU:  {test_time} seconds")
         if args.hardware == 2:
             print("Running on GPU")
             try:
                 t1 = time()
                 with tf.device("/GPU:0"):
                     # use 5 layers
-                    gpu_model = get_model(dshape, dense, hidden_layers=5)
+                    gpu_model = get_model(dshape, dense, hidden_layers=args.layers)
                     gpu_model.fit(x_train, y_train, epochs=args.iteration)
                 t2 = time()
-                test_gpu_time = t2-t1
-                print(f"Test GPU:  {test_gpu_time} seconds")
+                test_time = t2-t1
+                cpu_gpu = "GPU"
+                print(f"Test GPU:  {test_time} seconds")
             except:
                 print(system["gpu"])
     if args.subcommand == "save":
         # write in the csv file for saving
+        # labels = ["System_name","CPU_data","RAM_total","GPU_data","CPU/GPU","Dataset","#_layers","Epochs","Training_time[s]"]
+        attributes = [system["system"],system["cpu_name"],system["total_ram"],system["gpu"],cpu_gpu,data_name,args.layers,args.iteration,test_time]
+        save_benchmark(attributes)
         print("The benchmark has saved succesfully")
 
 if __name__ == "__main__":
