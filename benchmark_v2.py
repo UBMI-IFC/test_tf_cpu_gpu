@@ -22,7 +22,7 @@ from sklearn.linear_model import LogisticRegression                             
 from sklearn.svm import SVC                                                                             # model
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis, QuadraticDiscriminantAnalysis     # model
 # misc libraries
-from csv import writer
+import csv
 import multiprocessing
 import os
 from time import time
@@ -172,10 +172,16 @@ def get_model(in_shape, dense_neurons, hidden_layers=1):
 
 def save_benchmark(lst):
     with open("benchmark.csv", "a",newline="",encoding="utf-8") as benchmark:
-        writer_obj = writer(benchmark)
+        writer_obj = csv.writer(benchmark)
         writer_obj.writerow(lst)
         benchmark.close()
     return None
+
+def show_benchmark():
+    with open("benchmark.csv", 'r') as file:
+        csvreader = csv.reader(file)
+        for row in csvreader:
+            print(row)
 
 # Parser zone
 
@@ -216,6 +222,7 @@ def main_func():
     if args.subcommand == "show":
         # Para que muestre el benchmark que llevamos, se deberá guardar en un html o un .csv por separado
         print("Saved benchmarks")
+        show_benchmark()
     if args.subcommand == "run":
         # Para que corra el código con todos los posibles escenarios, deberá correr al menos un modelo con un dataset
         print(args)
