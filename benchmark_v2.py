@@ -1,11 +1,8 @@
 # Importing zone
 # for creating the arguments
 import argparse
-import sys
 # basic data libraries
 import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
 # for accessing the hardware info
 import platform
 import psutil                       #pip install psutil
@@ -13,18 +10,8 @@ import cpuinfo                      #pip install py-cpuinfo
 # for ml models
 import tensorflow as tf
 from tensorflow import keras
-from sklearn import datasets
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler                                                        # to standarize
-from sklearn.decomposition import PCA                                                                   # to standarize
-from sklearn.ensemble import RandomForestClassifier                                                     # model
-from sklearn.linear_model import LogisticRegression                                                     # model
-from sklearn.svm import SVC                                                                             # model
-from sklearn.discriminant_analysis import LinearDiscriminantAnalysis, QuadraticDiscriminantAnalysis     # model
 # misc libraries
 import csv
-import multiprocessing
-import os
 from time import time
 
 # Pseudocode
@@ -202,7 +189,7 @@ def arguments():
     show_subparser = subparser.add_parser("show", help="display the list of saved benchmarks") # maybe argumentos posicionales del primer y último benchmark
     run_subparser = subparser.add_parser("run", help="options for running the current benchmark") # run si tiene que tener argumentos 
     run_subparser.add_argument("-H","--hardware",choices=[1,2], default=1, type=int, help="select the hardware in which the code is ran")
-    run_subparser.add_argument("-p","--processor", choices=[1,2,3,4,5,6,7,8], default=1, type=int, help="select the quantity of processors that can be used in the training")
+    # run_subparser.add_argument("-p","--processor", choices=[1,2,3,4,5,6,7,8], default=1, type=int, help="select the quantity of processors that can be used in the training")
     run_subparser.add_argument("-d","--dataset", choices=[1,2,3,4,5], default=1, type=int, help="select the dataset to train the ML model")
     run_subparser.add_argument("-l","--layers", default=3, type=int, help="select the number of hidden layers to train the model")
     run_subparser.add_argument("-i","--iteration", action="store", help="Number of repeated trainings for each algorithm (int, default = 1000)",
@@ -225,7 +212,7 @@ def main_func():
         show_benchmark()
     if args.subcommand == "run":
         # Para que corra el código con todos los posibles escenarios, deberá correr al menos un modelo con un dataset
-        print(args)
+        # print(args)
         x_train, y_train, x_test, y_test, data_name = dataset_processing(args.dataset)
         dshape = x_train.shape[1:]
         dense = np.prod(dshape)
